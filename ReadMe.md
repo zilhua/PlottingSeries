@@ -1,4 +1,4 @@
 ## **PlottingSeries**
 
 ### **First Week**
-* Plot histogram
+* Plotting histogram and Story
