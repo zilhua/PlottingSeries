@@ -10,6 +10,7 @@ import re
 import codecs
 from selenium import webdriver
 import selenium.webdriver.support.ui as ui
+import random
 #import shutil
 #import urllib
 #from selenium.webdriver.common.keys import Keys
@@ -64,6 +65,7 @@ def VisitPersonPage(user_id):
         birthday, sex, area, user_num_id, pet_name, \
         num_wb, num_gz, num_fs = _getIndividualInfo(user_id)
         fans_infos = getFansInfos(user_num_id)
+        return fans_infos
     except Exception, e:
         print "Error: ", e
 
@@ -98,14 +100,14 @@ def _getIndividualInfo(user_id):
     num_fs_temp = re.findall(pattern, str_fs.text, re.S | re.M)
     num_fs = int(num_fs_temp[0])
     #获取生日等资料
-    driver.get("http://weibo.cn/{0}/info".format(user_id))
+    driver.get("http://weibo.cn/{0}/info".format(user_num_id))
     birthday = " "
     for i in driver.find_elements_by_xpath(
             "//div[contains(@class, 'c')]"):
         r = re.search(u"生日:(.*)\n", i.text)
         if r:
             birthday = r.group(1)
-    return birthday, sex, area, user_num_id, pet_name, \
+    return birthday.strip(), sex.strip(), area.strip(), user_num_id.strip(), pet_name.strip(), \
            str(num_wb), str(num_gz), str(num_fs)
 
 def getFansInfos(user_num_id):
@@ -120,8 +122,9 @@ def getFansInfos(user_num_id):
                 for url_fans in [a.get_attribute("href")
                     for tr in  driver.find_elements_by_xpath('//tr')
                         for a in tr.find_elements_by_xpath('td[1]/a')]:
+                    fans_num_id = re.search('/(\w+)$',url_fans).group(1)
                     birthday, sex, area, u_userid, pet_name, \
-                        num_wb, num_gz, num_fs = _getIndividualInfo(url_fans)
+                        num_wb, num_gz, num_fs = _getIndividualInfo(fans_num_id)
                     fans_infos[u_userid]["sex"] = sex
                     fans_infos[u_userid]["area"] = area
                     fans_infos[u_userid]["pet_name"] = pet_name
@@ -135,16 +138,15 @@ def getFansInfos(user_num_id):
                     infofile.write("num_gz={0}\n".format(num_gz))
                     infofile.write("num_fs={0}\n".format(num_fs))
                     infofile.flush()
-                time.sleep(0.5)
+                time.sleep(random.randint(0,5))
     except :
         pass
     finally:
         return fans_infos
 
-infofile.close()
-
 if __name__ == "__main__":
     username = '15611710381'
     password = 'huangjunjie'
     LoginWeiBo(username, password)
-    VisitPersonPage("durexinchina")
+    fans_infos = VisitPersonPage("durexinchina")
+    infofile.close()
